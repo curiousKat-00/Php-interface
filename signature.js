@@ -4,20 +4,21 @@ const crypto = require('crypto');
 
 // Helper to create the signature string
 function createSignatureString(data, passphrase = '') {
-  // Sort keys alphabetically
-  const keys = Object.keys(data).sort();
-  let signatureString = keys
-    .map(key => `${key}=${encodeURIComponent(data[key]).replace(/%20/g, '+')}`)
+  // Remove empty values and the signature field
+  const filtered = Object.keys(data)
+    .filter(key => data[key] !== '' && key !== 'signature')
+    .sort()
+    .map(key => `${key}=${encodeURIComponent(data[key])}`)
     .join('&');
   if (passphrase) {
-    signatureString += `&passphrase=${encodeURIComponent(passphrase)}`;
+    return `${filtered}&passphrase=${encodeURIComponent(passphrase)}`;
   }
-  return signatureString;
+  return filtered;
 }
 
 router.post('/signature', (req, res) => {
   const data = req.body;
-  const passphrase = ''; // Optional: add your passphrase here if you use one
+  const passphrase = ''; // Add your passphrase here if you use one
 
   const signatureString = createSignatureString(data, passphrase);
   const signature = crypto.createHash('md5').update(signatureString).digest('hex');
