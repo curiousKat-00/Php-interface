@@ -13,7 +13,7 @@ const corsOptions = {
 router.use(cors(corsOptions));
 
 // Helper to create the signature string
-function createSignatureString(data, passphrase = null) {
+function createSignatureString(data, passphrase = 'Work_2000100') {
     // A custom function to encode values in a way that matches PHP's http_build_query.
     // This is often required for payment gateway signature generation.
     const customEncodeURIComponent = (str) => {
