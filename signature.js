@@ -44,7 +44,7 @@ router.post('/signature', (req, res) => {
   const data = req.body;
   // Use the passphrase from environment variables, or an empty string if not set.
   // An empty string is correct if you have not set a passphrase in your PayFast account.
-  const passphrase = process.env.PAYFAST_PASSPHRASE || '';
+  const passphrase = null || '';
 
   const signatureString = createSignatureString(data, passphrase);
 
