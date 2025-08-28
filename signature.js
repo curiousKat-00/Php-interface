@@ -13,7 +13,7 @@ const corsOptions = {
 router.use(cors(corsOptions));
 
 // Helper to create the signature string
-function createSignatureString(data, passphrase = '') {
+function createSignatureString(data, passphrase = null) {
     // A custom function to encode values in a way that matches PHP's http_build_query.
     // This is often required for payment gateway signature generation.
     const customEncodeURIComponent = (str) => {
@@ -26,18 +26,20 @@ function createSignatureString(data, passphrase = '') {
         return encoded.replace(/%20/g, '+');
     };
 
+    // Create a copy of the data object to include the passphrase for sorting.
+    const dataForSignature = { ...data };
+    if (passphrase) {
+        dataForSignature.passphrase = passphrase;
+    }
+
     // Create parameter string
-    const paramString = Object.keys(data)
+    const paramString = Object.keys(dataForSignature)
         // Filter out empty values, nulls, and the signature
-        .filter(key => data[key] !== '' && data[key] != null && key !== 'signature')
+        .filter(key => dataForSignature[key] !== '' && dataForSignature[key] != null && key !== 'signature')
         .sort()
-        .map(key => `${key}=${customEncodeURIComponent(String(data[key]).trim())}`)
+        .map(key => `${key}=${customEncodeURIComponent(String(dataForSignature[key]).trim())}`)
         .join('&');
 
-    // Add passphrase if present
-    if (passphrase) {
-        return `${paramString}&passphrase=${customEncodeURIComponent(passphrase.trim())}`;
-    }
     return paramString;
 }
 
@@ -47,7 +49,7 @@ router.post('/signature', (req, res) => {
   // It's recommended to store this in an environment variable.
   // The default passphrase for the PayFast sandbox (merchant_id 10000100) is 'salt'.
   // If you have set a custom passphrase in your sandbox account, use that instead.
-  const passphrase = null; // For production, use process.env.PAYFAST_PASSPHRASE
+  const passphrase = 'salt'; // For production, use process.env.PAYFAST_PASSPHRASE
 
   const signatureString = createSignatureString(data, passphrase);
 
