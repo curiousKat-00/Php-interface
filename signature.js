@@ -45,7 +45,9 @@ router.post('/signature', (req, res) => {
   const data = req.body;
   // IMPORTANT: Add your passphrase here if you have one.
   // It's recommended to store this in an environment variable.
-  const passphrase = ''; // e.g., process.env.PAYFAST_PASSPHRASE;
+  // The default passphrase for the PayFast sandbox (merchant_id 10000100) is 'salt'.
+  // If you have set a custom passphrase in your sandbox account, use that instead.
+  const passphrase = null; // For production, use process.env.PAYFAST_PASSPHRASE
 
   const signatureString = createSignatureString(data, passphrase);
 
