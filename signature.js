@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const cors = require('cors');
+// Load environment variables from .env file
+require('dotenv').config();
 const crypto = require('crypto');
 
 // Configure CORS to allow requests from your React app
@@ -13,7 +15,7 @@ const corsOptions = {
 router.use(cors(corsOptions));
 
 // Helper to create the signature string
-function createSignatureString(data, passphrase = 'Work_2000100') {
+function createSignatureString(data, passphrase) {
     // A custom function to encode values in a way that matches PHP's http_build_query.
     // This is often required for payment gateway signature generation.
     const customEncodeURIComponent = (str) => {
@@ -45,12 +47,16 @@ function createSignatureString(data, passphrase = 'Work_2000100') {
 
 router.post('/signature', (req, res) => {
   const data = req.body;
-  // IMPORTANT: Add your passphrase here if you have one.
-  // It's recommended to store this in an environment variable.
-  // The default passphrase for the PayFast sandbox (merchant_id 10000100) is 'salt'.
-  // If you have set a custom passphrase in your sandbox account, use that instead.
-  const passphrase = 'salt'; // For production, use process.env.PAYFAST_PASSPHRASE
+  const passphrase = process.env.PAYFAST_PASSPHRASE;
 
+  // It's crucial to have a passphrase for security.
+  if (!passphrase) {
+    console.error('FATAL: PAYFAST_PASSPHRASE is not set in the environment variables.');
+    return res.status(500).json({
+      error: 'Server configuration error: Payment passphrase is not set.',
+    });
+  }
+  
   const signatureString = createSignatureString(data, passphrase);
 
   const signature = crypto
