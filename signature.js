@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const corsOptions = {
   origin: 'http://localhost:3000',
   optionsSuccessStatus: 200, // For legacy browser support
+  AccessControlAllowOrigin
 };
 
 // Apply CORS middleware to the router
