@@ -7,7 +7,6 @@ const crypto = require('crypto');
 const corsOptions = {
   origin: 'http://localhost:3000',
   optionsSuccessStatus: 200, // For legacy browser support
-  AccessControlAllowOrigin
 };
 
 // Apply CORS middleware to the router
@@ -15,13 +14,16 @@ router.use(cors(corsOptions));
 
 // Helper to create the signature string
 function createSignatureString(data, passphrase = '') {
-    // A custom function to encode values in a way that matches PHP's rawurlencode.
+    // A custom function to encode values in a way that matches PHP's http_build_query.
     // This is often required for payment gateway signature generation.
     const customEncodeURIComponent = (str) => {
-        // encodeURIComponent misses !, ', (, ), and *
-        return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
+        // encodeURIComponent misses some characters and encodes spaces as %20.
+        // PayFast expects spaces to be encoded as '+' and other special characters
+        // to be encoded in a way that matches PHP's rawurlencode.
+        const encoded = encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
             return '%' + c.charCodeAt(0).toString(16).toUpperCase();
         });
+        return encoded.replace(/%20/g, '+');
     };
 
     // Create parameter string
