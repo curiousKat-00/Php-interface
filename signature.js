@@ -1,6 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const cors = require('cors');
 const crypto = require('crypto');
+
+// Configure CORS to allow requests from your React app
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  optionsSuccessStatus: 200, // For legacy browser support
+};
+
+// Apply CORS middleware to the router
+router.use(cors(corsOptions));
 
 // Helper to create the signature string
 function createSignatureString(data, passphrase = '') {
@@ -30,10 +40,17 @@ function createSignatureString(data, passphrase = '') {
 
 router.post('/signature', (req, res) => {
   const data = req.body;
-  const passphrase = ''; // Add your passphrase here if you use one
+  // IMPORTANT: Add your passphrase here if you have one.
+  // It's recommended to store this in an environment variable.
+  const passphrase = ''; // e.g., process.env.PAYFAST_PASSPHRASE;
 
   const signatureString = createSignatureString(data, passphrase);
-  const signature = crypto.createHash('md5').update(signatureString).digest('hex');
+
+  const signature = crypto
+    .createHash('md5')
+    .update(signatureString)
+    .digest('hex');
+
   res.json({ signature });
 });
 
