@@ -4,16 +4,28 @@ const crypto = require('crypto');
 
 // Helper to create the signature string
 function createSignatureString(data, passphrase = '') {
-  // Remove empty values and the signature field
-  const filtered = Object.keys(data)
-    .filter(key => data[key] !== '' && key !== 'signature')
-    .sort()
-    .map(key => `${key}=${encodeURIComponent(data[key])}`)
-    .join('&');
-  if (passphrase) {
-    return `${filtered}&passphrase=${encodeURIComponent(passphrase)}`;
-  }
-  return filtered;
+    // A custom function to encode values in a way that matches PHP's rawurlencode.
+    // This is often required for payment gateway signature generation.
+    const customEncodeURIComponent = (str) => {
+        // encodeURIComponent misses !, ', (, ), and *
+        return encodeURIComponent(str).replace(/[!'()*]/g, (c) => {
+            return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+        });
+    };
+
+    // Create parameter string
+    const paramString = Object.keys(data)
+        // Filter out empty values, nulls, and the signature
+        .filter(key => data[key] !== '' && data[key] != null && key !== 'signature')
+        .sort()
+        .map(key => `${key}=${customEncodeURIComponent(String(data[key]).trim())}`)
+        .join('&');
+
+    // Add passphrase if present
+    if (passphrase) {
+        return `${paramString}&passphrase=${customEncodeURIComponent(passphrase.trim())}`;
+    }
+    return paramString;
 }
 
 router.post('/signature', (req, res) => {
