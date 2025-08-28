@@ -26,13 +26,21 @@ function createSignatureString(data, passphrase) {
 
     // Create a copy of the data object to include the passphrase for sorting.
     const dataForSignature = { ...data };
-    if (passphrase) {
-        dataForSignature.passphrase = passphrase;
-    }
+    // Always add passphrase to dataForSignature.
+    // If no passphrase is used, it will be an empty string (''),
+    // which PayFast expects as 'passphrase='.
+    dataForSignature.passphrase = passphrase;
 
     // Create parameter string
     const paramString = Object.keys(dataForSignature)
-        .filter(key => dataForSignature[key] !== '' && dataForSignature[key] != null && key !== 'signature')
+        .filter(key => {
+            // The 'signature' field itself should never be included in the signature calculation.
+            if (key === 'signature') return false;
+            // The 'passphrase' field should always be included, even if its value is empty.
+            if (key === 'passphrase') return true;
+            // For all other fields, filter out empty strings and null/undefined values.
+            return dataForSignature[key] !== '' && dataForSignature[key] != null;
+        })
         .sort()
         .map(key => `${key}=${customEncodeURIComponent(String(dataForSignature[key]).trim())}`)
         .join('&');
